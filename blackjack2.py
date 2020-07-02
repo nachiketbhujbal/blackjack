@@ -51,12 +51,7 @@ class Hand:
         while self.value > 21 and self.aces:
             self.value -= 10
             self.aces -= 1
-        
-    def __str__(self):
-        hand_cont = ''
-        for c in self.cards:
-            hand_cont += '\n' + str(c) 
-        return ' hand has (value: {}):'.format(self.value) + hand_cont
+
 
 class Chips:
     def __init__(self):
@@ -66,65 +61,89 @@ class Chips:
         self.total += self.bet
     def lose_bet(self):
         self.total -= self.bet
+    def take_bet(self):
+        my_bet = int(input("How much do you want to bet? "))
+        self.bet = 0 + my_bet
 
-def take_bet():
-    my_bet = int(input("How much do you want to bet? "))
 
-def hit(deck,hand):
-    do_you_want_a_hit = str(input("Hit me? (y/n)"))
-    if do_you_want_a_hit.lower() == 'y':
-        hand.add_card(deck)
-    if do_you_want_a_hit.lower() == 'n':
-        pass
-    else:
-        while dealer_hand.value > 17:
-            dealer_hand.add_card(playing_deck.deal())
+def hit(deck,player, dealer,chips):
+    global playing
+    while playing:
+        do_you_want_a_hit = str(input("Hit me? (y/n)"))
+        if do_you_want_a_hit == 'y':
+            player.add_card(deck.deal())
+            if player.value > 21:
+                player_bust(player,dealer,chips)
+            if player.value == 21:
+                player_win(player,dealer,chips)
+        if do_you_want_a_hit == 'n':
+            break
+        else:
+            while dealer.value > 17:
+                dealer.add_card(playing_deck.deal())
+                if dealer.value == 21:
+                    dealer_win(player,dealer,chips)
+                if dealer.value > 21:
+                    dealer_bust(player,dealer,chips) 
 
-#hit_or_stand is supposded to 'accept the deck and the player's hands as args.
-#if player hits, then employ hit() function above. if stand, playing == False
-def hit_or_stand(deck,hand):
-    pass
-    global playing #to controle an upcoming while loop
-    do_you_want_a_hit = str(input("Hit me? y/n: "))
-    ###add hit function....is this ncessar,...maybe bc of playing == false 
         
 def show_some(player, dealer):
     player_cont = ''
     dealer_cont = ''
-    dealer_hidden = []
+    dealer_hidden = ''
     for c in player.cards:
         player_cont += '\n' + str(c)
-        return f'Player has (Value: {player.value}): {player_cont}.'
-    '''
-    going to pop off the dealer's first card, then only show the rest of the cards
-    '''
-    print(dealer.cards)
-    dealer.cards.pop(0)
-
-
+    print('PLAYER 1 (VALUE: {})\nCARDS: {}'.format(player.value, player_cont))
+    for num, c in enumerate(dealer.cards):
+        if num == 0:
+            dealer_hidden += str(c)
+        if num > 0:
+            dealer_cont += '\n' + str(c)
+    print('DEALER CARDS: {}'.format(dealer_cont))
 
 def show_all(player, dealer):
-    pass
-def player_bust():
-    pass
-def player_win():
-    pass
-def dealer_win():
-    pass
-def dealer_bust():
-    pass
+    dealer_all = dealer_cont + dealer_hidden
+    print('DEALER (VALUE:{})\nCARDS: {}'.format(dealer.value, dealer_all))
+    print('PLAYER 1 (VALUE: {})\nCARDS: {}'.format(player.value, player_cont))
+
+def player_bust(player, dealer, player_chip):
+    print("PLAYER LOSES!!!!!!!!")
+    player_chip.lose_bet()
+    print(player_chip.total)
+    show_all(player, dealer)
+    playing = False
+def player_win(player, dealer, player_chip):
+    print("PLAYER WINS!!!!")
+    player_chip.win_bet()
+    print(player_chip.total)
+    show_all(player, dealer)
+    playing = False
+def dealer_win(player, dealer, player_chip):
+    print('DEALER WINS!!!')
+    player_chip.lose_bet()
+    print(player_chip.total)
+    show_all(player, dealer)
+    playing = False
+def dealer_bust(player, dealer, player_chip):
+    print('DEALER LOSES!)')
+    player_chip.win_bet()
+    print(player_chip.total)
+    show_all(player, dealer)
+    playing = False
 
 
 
-#while True 
-print("Welcome to blackjack.py...hope this works! lol :)")
-playing_deck = Deck()
-playing_deck.shuffle()
-player_hand = Hand()
-dealer_hand = Hand()
-player_hand.add_card(playing_deck.deal())
-dealer_hand.add_card(playing_deck.deal())
-player_hand.add_card(playing_deck.deal())    
-dealer_hand.add_card(playing_deck.deal())
-print(player_hand)
-print(dealer_hand)
+while True:
+    print("Welcome to blackjack.py...hope this works! lol :)")
+    player_chip = Chips()
+    playing_deck = Deck()
+    playing_deck.shuffle()
+    player_chip.take_bet()
+    player_hand = Hand()
+    dealer_hand = Hand()
+    player_hand.add_card(playing_deck.deal())
+    dealer_hand.add_card(playing_deck.deal())
+    player_hand.add_card(playing_deck.deal())    
+    dealer_hand.add_card(playing_deck.deal())
+    show_some(player_hand, dealer_hand)
+    hit(playing_deck, player_hand,dealer_hand,player_chip)
