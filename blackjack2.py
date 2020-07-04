@@ -75,41 +75,51 @@ class Chips:
                 else:
                     break
 
-
-
-def hit(deck,player, dealer):
+def hit(deck,player):
+    player.add_card(deck.deal())
+    player.ace_adjust()
+def hit_or_stand(deck,player,dealer):
     global playing
     while True:
-        if player.value < 21:
-            x = input("Hit me? (y/n) ")
-            if x.lower() == 'y':
-                player.add_card(deck.deal())
-                player.ace_adjust()
-                show_some(player, dealer)   
-            if x.lower() == 'n':
-                print("dealer turn")
-                playing = False
-
-        
-        
+        x = input("Hit me? (y/n) ")
+        if x.lower() == 'y':
+            hit(deck,player)
+            show_some(player,dealer)
+        elif x.lower() == 'n':
+            print("dealer turn")
+            playing = False
+            break
+        else:
+            print("Sorry, please try again")
+            continue
+        break 
 def show_some(player, dealer):
+    global player_cont
+    global dealer_cont
+    global dealer_hidden
     player_cont = ''
     dealer_cont = ''
     dealer_hidden = ''
+    
     for c in player.cards:
         player_cont += '\n' + str(c)
+
     print('PLAYER 1 (VALUE: {})\nCARDS: {}'.format(player.value, player_cont))
+    
     for num, c in enumerate(dealer.cards):
         if num == 0:
             dealer_hidden += str(c)
         if num > 0:
             dealer_cont += '\n' + str(c)
+
     print('DEALER CARDS: {}'.format(dealer_cont))
 
 def show_all(player, dealer):
-    dealer_all = dealer_cont + dealer_hidden
-    print('DEALER (VALUE:{})\nCARDS: {}'.format(dealer.value, dealer_all))
-    print('PLAYER 1 (VALUE: {})\nCARDS: {}'.format(player.value, player_cont))
+    global dealer_all
+    dealer_all = dealer_cont + '\n' + dealer_hidden
+
+    print('DEALER (VALUE:{})\nCARDS: {}\nHidden:{}'.format(dealer.value, dealer_cont, dealer_hidden))
+    print('\nPLAYER 1 (VALUE: {})\nCARDS: {}'.format(player.value, player_cont))
 
 def player_bust(player, dealer, player_chip):
     print("PLAYER LOSES!!!!!!!!")
@@ -119,29 +129,23 @@ def player_win(player, dealer, player_chip):
     print("PLAYER WINS!!!!")
     player_chip.win_bet()
     print("Player has {}".format(player_chip.total))
-    
 def dealer_win(player, dealer, player_chip):
     print('DEALER WINS!!!')
     player_chip.lose_bet()
     print("Player has {}".format(player_chip.total))
-    
 def dealer_bust(player, dealer, player_chip):
     print('DEALER LOSES!)')
     player_chip.win_bet()
     print("Player has {}".format(player_chip.total))
-    
 def push(player,dealer):
     print("Players tie.")
 
-
-
-try:
-    while True:
+while True:
         print("Welcome to blackjack.py...hope this works! lol :)")
         player_chip = Chips()
         playing_deck = Deck()
         playing_deck.shuffle()
-        
+            
         player_chip.take_bet()
         player_hand = Hand()
         dealer_hand = Hand()
@@ -150,29 +154,36 @@ try:
         player_hand.add_card(playing_deck.deal())    
         dealer_hand.add_card(playing_deck.deal())
         show_some(player_hand, dealer_hand)
-
+    
         while playing:
-            if player_hand.value < 21:
-                hit(playing_deck, player_hand,dealer_hand)
+            #ASK PLAYER IF HIT, HIT UNTIL PLAYING IS FALSE
+            hit_or_stand(playing_deck,player_hand,dealer_hand)
+
+            #IF H/S is NO, THEN PRINT "DEALER TURN, and set playing to false"
             if player_hand.value > 21:
                 player_bust(player_hand,dealer_hand,player_chip)
                 break
-        if player_hand.value <= 21:
-            while dealer_hand.value > 17:
-                dealer_hand.add_card(playing_deck.deal())
-        show_all(player_hand,dealer_hand)
+            
 
-        if dealer_hand.value > 21:
-            dealer_bust(player_hand,dealer_hand,player_chip)
-        if dealer_hand.value < player_hand.value:
-            dealer_win(player_hand,dealer_hand,player_chip)
-        if player_hand.value < dealer_hand.value:
-            player_win(player_hand,dealer_hand,player_chip)
-        else:
-            push(player_hand,dealer_hand)
-    
+             ##perhaps indent this even more....elif <= 21, run the win checks indented.
+            elif player_hand.value <= 21:
+                while dealer_hand.value < 17:
+                    hit(playing_deck, dealer_hand)
+
+                    if dealer_hand.value > 21:
+                        dealer_bust(player_hand,dealer_hand,player_chip)
+                        show_all(player_hand,dealer_hand)
+                    elif dealer_hand.value < player_hand.value:  
+                        dealer_win(player_hand,dealer_hand,player_chip)
+                        show_all(player_hand,dealer_hand)
+                    elif player_hand.value > dealer_hand.value:
+                        player_win(player_hand,dealer_hand,player_chip)
+                        show_all(player_hand,dealer_hand)
+                    else:
+                        push(player_hand,dealer_hand)
+                        show_all(player_hand,dealer_hand)
         new_game = input("Play again? y/n: ")
-
+    
         if new_game.lower() == 'y':
             playing = True
             continue
@@ -181,5 +192,3 @@ try:
             break
 
 
-except KeyboardInterrupt:
-    print("\nok stopping bye :-(")
